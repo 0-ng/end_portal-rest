@@ -24,7 +24,7 @@ def check_auth(token):
     if username == "admin":
         matchRest = "B"
         matchWeb = "B"
-    if env != "portal" or envRest != matchRest or envWeb != matchWeb:
+    if env != "portal" or envRest != matchRest or envWeb != matchWeb or matchRest != os.environ["APP_ENV"]:
         return False
     return True
 
@@ -46,13 +46,18 @@ def requires_auth(f):
     return decorated
 
 
-@app.route('/')
+@app.route('/index')
 @requires_auth
 def hello():
     msg = "token match env"
     ip = get_host_ip()
     resp = jsonify(code="0", data={"msg": msg, "ip": ip})
     return resp
+
+
+@app.route('/test')
+def test():
+    return jsonify(code="0", data={"msg": "succeeded"})
 
 
 def equal(b: bytes):
