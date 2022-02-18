@@ -4,8 +4,14 @@ import socket
 from flask import Flask, request, session, jsonify, make_response, send_from_directory, abort
 import os
 from functools import wraps
+from config import my_secretKey
+import jwt
+import requests
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "SECRET_KEY"
+
+OAUTH_REST_URL = "http://oauth-rest"
+GET_USER_INFO = "/api/api_isSuperUser"
 
 def get_host_ip():
     try:
@@ -18,13 +24,18 @@ def get_host_ip():
 
 
 def check_auth(token):
-    env, envRest, envWeb, username = token.split(".")
+    dict = jwt.decode(token, my_secretKey, algorithms=['HS256'])
+    print("decode token", dict)
+    envRest, envWeb, username = dict['portal_rest'], dict['portal_web'], dict['username']
     matchRest = "A"
     matchWeb = "A"
-    if username == "admin":
+    res = requests.get(OAUTH_REST_URL+GET_USER_INFO, params={"username": username})
+    print(res.json())
+    print(res.json()["superUser"])
+    if res.json()["superUser"]:
         matchRest = "B"
         matchWeb = "B"
-    if env != "portal" or envRest != matchRest or envWeb != matchWeb or matchRest != os.environ["APP_ENV"]:
+    if envRest != matchRest or envWeb != matchWeb or matchRest != os.environ["APP_ENV"]:
         return False
     return True
 
