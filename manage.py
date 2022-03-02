@@ -23,6 +23,11 @@ def get_host_ip():
     return ip
 
 
+def get_username_by_auth(token):
+    dict = jwt.decode(token, my_secretKey, algorithms=['HS256'])
+    return dict['username']
+
+
 def check_auth(token):
     dict = jwt.decode(token, my_secretKey, algorithms=['HS256'])
     print("decode token", dict)
@@ -60,9 +65,10 @@ def requires_auth(f):
 @app.route('/index')
 @requires_auth
 def hello():
+    auth = request.headers.get('Authorization')
     msg = "token match env"
     ip = get_host_ip()
-    resp = jsonify(code="0", data={"msg": msg, "ip": ip})
+    resp = jsonify(code="0", data={"msg": msg, "ip": ip, "username": get_username_by_auth(auth)})
     return resp
 
 
